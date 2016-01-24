@@ -1,4 +1,15 @@
-## 0.4.0 (Unreleased)
+## 0.4.1 (January 13, 2016)
+
+SECURITY:
+
+  * Build against Go 1.5.3 to mitigate a security vulnerability introduced in
+    Go 1.5. For more information, please see
+    https://groups.google.com/forum/#!topic/golang-dev/MEATuOi_ei4
+
+This is a security-only release; other than the version number and building
+against Go 1.5.3, there are no changes from 0.4.0.
+
+## 0.4.0 (December 10, 2015)
 
 DEPRECATIONS/BREAKING CHANGES:
 
@@ -11,9 +22,25 @@ DEPRECATIONS/BREAKING CHANGES:
  * As noted below in the FEATURES section, if your Vault installation contains
    a policy called `default`, new tokens created will inherit this policy
    automatically.
+ * In the PKI backend there have been a few minor breaking changes:
+   * The token display name is no longer a valid option for providing a base
+   domain for issuance. Since this name is prepended with the name of the
+   authentication backend that issued it, it provided a faulty use-case at best
+   and a confusing experience at worst. We hope to figure out a better
+   per-token value in a future release.
+   * The `allowed_base_domain` parameter has been changed to `allowed_domains`,
+   which accepts a comma-separated list of domains. This allows issuing
+   certificates with DNS subjects across multiple domains. If you had a
+   configured `allowed_base_domain` parameter, it will be migrated
+   automatically when the role is read (either via a normal read, or via
+   issuing a certificate).
 
 FEATURES:
 
+ * **Significantly Enhanced PKI Backend**: The `pki` backend can now generate
+   and sign root CA certificates and intermediate CA CSRs. It can also now sign
+   submitted client CSRs, as well as a significant number of other
+   enhancements. See the updated documentation for the full API. [GH-666]
  * **CRL Checking for Certificate Authentication**: The `cert` backend now
    supports pushing CRLs into the mount and using the contained serial numbers
    for revocation checking. See the documentation for the `cert` backend for
@@ -58,9 +85,12 @@ IMPROVEMENTS:
  * logical: Responses now contain a "warnings" key containing a list of
    warnings returned from the server. These are conditions that did not require
    failing an operation, but of which the client should be aware. [GH-676]
- * physical/consul: Consul now uses a connection pool to limit the number of
-   outstanding operations, improving behavior when a lot of operations must
-   happen at once [GH-677]
+ * physical/(consul,etcd): Consul and etcd now use a connection pool to limit
+   the number of outstanding operations, improving behavior when a lot of
+   operations must happen at once [GH-677] [GH-780]
+ * physical/consul: The `datacenter` parameter was removed; It could not be
+   effective unless the Vault node (or the Consul node it was connecting to)
+   was in the datacenter specified, in which case it wasn't needed [GH-816]
  * physical/etcd: Support TLS-encrypted connections and use a connection pool
    to limit the number of outstanding operations [GH-780]
  * physical/s3: The S3 endpoint can now be configured, allowing using
@@ -94,13 +124,15 @@ generate them, leading to client errors.
  * secret/generic: Validate given duration at write time, not just read time;
    if stored durations are not parseable, return a warning and the default
    duration rather than an error [GH-718]
+ * secret/generic: Return 400 instead of 500 when `generic` backend is written
+   to with no data fields [GH-825]
  * secret/postgresql: Revoke permissions before dropping a user or revocation
    may fail [GH-699]
 
 MISC:
 
  * Various documentation fixes and improvements [GH-685] [GH-688] [GH-697]
-   [GH-710] [GH-715]
+   [GH-710] [GH-715] [GH-831]
 
 ## 0.3.1 (October 6, 2015)
 

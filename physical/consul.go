@@ -53,9 +53,6 @@ func newConsulBackend(conf map[string]string) (Backend, error) {
 	if scheme, ok := conf["scheme"]; ok {
 		consulConf.Scheme = scheme
 	}
-	if dc, ok := conf["datacenter"]; ok {
-		consulConf.Datacenter = dc
-	}
 	if token, ok := conf["token"]; ok {
 		consulConf.Token = token
 	}
@@ -206,9 +203,10 @@ func (c *ConsulBackend) List(prefix string) ([]string, error) {
 func (c *ConsulBackend) LockWith(key, value string) (Lock, error) {
 	// Create the lock
 	opts := &api.LockOptions{
-		Key:         c.path + key,
-		Value:       []byte(value),
-		SessionName: "Vault Lock",
+		Key:            c.path + key,
+		Value:          []byte(value),
+		SessionName:    "Vault Lock",
+		MonitorRetries: 5,
 	}
 	lock, err := c.client.LockOpts(opts)
 	if err != nil {
